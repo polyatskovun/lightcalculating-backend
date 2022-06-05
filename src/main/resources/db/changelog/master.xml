@@ -104,4 +104,15 @@
             <column name="hours_of_uses" type="DOUBLE"/>
         </addColumn>
     </changeSet>
+
+    <changeSet id="1654323830592-6" author="polytskovun">
+        <sql dbms="h2">alter sequence SYSTEM_SEQUENCE_15CE4731_894E_4F00_970D_34FDB21340E8 restart with 1000</sql>
+        <sql dbms="h2">alter sequence SYSTEM_SEQUENCE_27A869D8_FDFD_44D6_BD40_DA727524C2A5 restart with 1000</sql>
+        <sql dbms="h2">alter sequence SYSTEM_SEQUENCE_46C54C06_C066_48B8_B8F0_C40A2B41703A restart with 1000</sql>
+        <sql dbms="h2">alter sequence SYSTEM_SEQUENCE_65F1D235_8E1A_41AD_9387_F263B3BAC9CE restart with 1000</sql>
+        <sql dbms="h2">alter sequence SYSTEM_SEQUENCE_CC12FA18_43E3_4550_AB62_F7AB3051B9A6 restart with 1000</sql>
+        <sql dbms="h2">alter sequence SYSTEM_SEQUENCE_EC944C7B_1732_4342_94C2_302A2634B12F restart with 1000</sql>
+        <sql dbms="h2">alter sequence SYSTEM_SEQUENCE_FF8B5FAC_BA44_47F7_B3EC_73DE777A8789 restart with 1000</sql>
+    </changeSet>
+
 </databaseChangeLog>

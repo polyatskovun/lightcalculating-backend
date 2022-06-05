@@ -1,6 +1,7 @@
 package com.polyatskovun.lightcalculating.service;
 
 import com.polyatskovun.lightcalculating.domain.Room;
+import com.polyatskovun.lightcalculating.domain.enums.RecordTypeEnum;
 import com.polyatskovun.lightcalculating.dto.RecordDto;
 import com.polyatskovun.lightcalculating.dto.RoomDto;
 import com.polyatskovun.lightcalculating.mapper.RoomMapper;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -36,21 +36,26 @@ public class RoomService {
         RoomDto roomDto = mapper.toDto(repository.save(room));
         roomDto.setYearCount(dto.getYearCount());
         roomDto.setRecords(dto.getRecords());
-        if (roomDto.getId() == null && roomDto.getRecords() != null && !roomDto.getRecords().isEmpty()) {
-            roomDto.getRecords().stream().filter(r -> r.getRecordType().getId() == 1L).findFirst().ifPresent(recordService::save);
+        if (dto.getId() == null && roomDto.getRecords() != null && !roomDto.getRecords().isEmpty()) {
+            roomDto.getRecords().stream().filter(r -> r.getRecordType().getId() == RecordTypeEnum.EXISTING.getId()).findFirst().ifPresent(r -> {
+                r.setRoom(roomDto);
+                recordService.saveExisting(r);
+            });
         }
         recordService.saveForRoom(roomDto);
+        roomDto.getRecords().forEach(r -> r.getRoom().setRecords(null));
         return roomDto;
     }
 
     public List<RoomDto> findAll() {
-        List<RoomDto> res = repository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
+        List<RoomDto> res = repository.findAll().stream().map(mapper::toDto).toList();
         List<RecordDto> records = recordService.findAll();
-        res.forEach(r -> r.setRecords(records.stream().filter(record -> record.getRoom().getId().equals(r.getId())).toList()));
+        res.forEach(r -> r.setRecords(records.stream().filter(recordModel -> recordModel.getRoom().getId().equals(r.getId())).toList()));
         return res;
     }
 
     public void deleteById(Long id) {
+        recordService.deleteAllByRoomId(id);
         repository.deleteById(id);
     }
 

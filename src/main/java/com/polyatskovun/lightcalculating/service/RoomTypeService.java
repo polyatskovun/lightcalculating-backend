@@ -26,7 +26,7 @@ public class RoomTypeService {
     }
 
     public List<RoomTypeDto> findAll() {
-        return repository.findAll().stream().map(mapper::toDto).collect(Collectors.toList());
+        return repository.findAll().stream().map(mapper::toDto).toList();
     }
 
     public void deleteById(Long id) {
