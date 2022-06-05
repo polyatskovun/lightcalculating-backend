@@ -1,0 +1,107 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+   https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet author="polyatskovun" id="202206040915">
+        <createTable tableName="socle">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_socle"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="price" type="INT"/>
+            <column name="place" type="INT"/>
+        </createTable>
+
+        <createTable tableName="lamp_type">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_lamptype"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+
+        <createTable tableName="lamp">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_lamp"/>
+            </column>
+            <column name="price" type="INT"/>
+            <column name="term_of_work" type="INT"/>
+            <column name="luminous_flux" type="INT"/>
+            <column name="power" type="INT"/>
+            <column name="model" type="VARCHAR(255)"/>
+            <column name="lamp_type_id" type="BIGINT"/>
+            <column name="socle_id" type="BIGINT"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseColumnNames="lamp_type_id" baseTableName="lamp" constraintName="FK_LAMP_ON_LAMP_TYPE" referencedColumnNames="id" referencedTableName="lamp_type"/>
+        <addForeignKeyConstraint baseColumnNames="socle_id" baseTableName="lamp" constraintName="FK_LAMP_ON_SOCLE" referencedColumnNames="id" referencedTableName="socle"/>
+
+        <createTable tableName="room_type">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_roomtype"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="lightning_rate" type="INT"/>
+        </createTable>
+
+        <createTable tableName="record_type">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_recordtype"/>
+            </column>
+            <column name="description" type="VARCHAR(255)"/>
+        </createTable>
+
+        <createTable tableName="room">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_room"/>
+            </column>
+            <column name="square" type="INT"/>
+            <column name="number" type="VARCHAR(255)"/>
+            <column name="room_type_id" type="BIGINT"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseColumnNames="room_type_id" baseTableName="room" constraintName="FK_ROOM_ON_ROOM_TYPE" referencedColumnNames="id" referencedTableName="room_type"/>
+
+        <createTable tableName="record">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_record"/>
+            </column>
+            <column name="count_lamp" type="INT"/>
+            <column name="count_socle" type="INT"/>
+            <column name="year" type="INT"/>
+            <column name="sum" type="INT"/>
+            <column name="room_id" type="BIGINT"/>
+            <column name="lamp_id" type="BIGINT"/>
+            <column name="record_type_id" type="BIGINT"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseColumnNames="lamp_id" baseTableName="record" constraintName="FK_RECORD_ON_LAMP" referencedColumnNames="id" referencedTableName="lamp"/>
+        <addForeignKeyConstraint baseColumnNames="record_type_id" baseTableName="record" constraintName="FK_RECORD_ON_RECORD_TYPE" referencedColumnNames="id" referencedTableName="record_type"/>
+        <addForeignKeyConstraint baseColumnNames="room_id" baseTableName="record" constraintName="FK_RECORD_ON_ROOM" referencedColumnNames="id" referencedTableName="room"/>
+    </changeSet>
+
+    <changeSet id="1654323830592-2" author="polytskovun" runOnChange="true">
+        <loadUpdateData tableName="record_type" file="db/changelog/content/record_type.csv" primaryKey="id"/>
+        <loadUpdateData tableName="room_type" file="db/changelog/content/room_type.csv" primaryKey="id" separator=";"/>
+        <loadUpdateData tableName="lamp_type" file="db/changelog/content/lamp_type.csv" primaryKey="id"/>
+        <loadUpdateData tableName="socle" file="db/changelog/content/socle.csv" primaryKey="id"/>
+        <loadUpdateData tableName="lamp" file="db/changelog/content/lamp.csv" primaryKey="id"/>
+    </changeSet>
+
+    <changeSet id="1654323830592-3" author="polytskovun">
+        <renameColumn tableName="record" oldColumnName="year" newColumnName="year_count"/>
+    </changeSet>
+
+    <changeSet id="1654323830592-4" author="polytskovun">
+        <modifyDataType tableName="record" columnName="sum" newDataType="DOUBLE"/>
+        <modifyDataType tableName="lamp" columnName="price" newDataType="DOUBLE"/>
+        <modifyDataType tableName="socle" columnName="price" newDataType="DOUBLE"/>
+    </changeSet>
+
+    <changeSet id="1654323830592-5" author="polytskovun">
+        <addColumn tableName="room">
+            <column name="hours_of_uses" type="DOUBLE"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>
