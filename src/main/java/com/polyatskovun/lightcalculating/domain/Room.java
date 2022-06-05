@@ -19,7 +19,7 @@ import javax.persistence.Table;
 public class Room extends IdEntity {
 
     @Column
-    private Integer square;
+    private Double square;
 
     @Column
     private String number;
@@ -32,7 +32,7 @@ public class Room extends IdEntity {
     private RoomType roomType;
 
     @Builder(toBuilder = true)
-    public Room(Long id, Integer square, Double hoursOfUses, String number, RoomType roomType) {
+    public Room(Long id, Double square, Double hoursOfUses, String number, RoomType roomType) {
         super(id);
         this.square = square;
         this.number = number;

@@ -36,7 +36,7 @@ public class RoomService {
         RoomDto roomDto = mapper.toDto(repository.save(room));
         roomDto.setYearCount(dto.getYearCount());
         roomDto.setRecords(dto.getRecords());
-        if (dto.getId() == null && roomDto.getRecords() != null && !roomDto.getRecords().isEmpty()) {
+        if (roomDto.getRecords() != null && !roomDto.getRecords().isEmpty()) {
             roomDto.getRecords().stream().filter(r -> r.getRecordType().getId() == RecordTypeEnum.EXISTING.getId()).findFirst().ifPresent(r -> {
                 r.setRoom(roomDto);
                 recordService.saveExisting(r);

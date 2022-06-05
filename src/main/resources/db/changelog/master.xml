@@ -115,4 +115,19 @@
         <sql dbms="h2">alter sequence SYSTEM_SEQUENCE_FF8B5FAC_BA44_47F7_B3EC_73DE777A8789 restart with 1000</sql>
     </changeSet>
 
+    <changeSet id="1654323830592-7" author="polytskovun">
+        <createTable tableName="user">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_user"/>
+            </column>
+            <column name="username" type="VARCHAR(255)"/>
+            <column name="password" type="VARCHAR(255)"/>
+        </createTable>
+
+        <modifyDataType tableName="room" columnName="square" newDataType="DOUBLE"/>
+    </changeSet>
+
+    <changeSet id="1654323830592-8" author="polytskovun">
+        <renameTable oldTableName="user" newTableName="user_table"/>
+    </changeSet>
 </databaseChangeLog>

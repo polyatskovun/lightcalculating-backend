@@ -1,5 +1,6 @@
 package com.polyatskovun.lightcalculating.service;
 
+import com.polyatskovun.lightcalculating.domain.Lamp;
 import com.polyatskovun.lightcalculating.domain.Record;
 import com.polyatskovun.lightcalculating.domain.enums.RecordTypeEnum;
 import com.polyatskovun.lightcalculating.dto.LampDto;
@@ -66,15 +67,25 @@ public class RecordService {
     }
 
     public void saveForRoom(RoomDto room) {
-        lampService.findAll().forEach(lamp -> {
-            RecordDto recordDto = new RecordDto();
-            Integer countLamp = getCountLamp(room, lamp);
-            Integer countSocle = getCountSocle(lamp, countLamp);
-            setRecordDtoFields(lamp, countLamp, room, recordDto, countSocle, RecordTypeEnum.NEW);
-            save(recordDto);
+        repository.findAllByRoomId(room.getId()).forEach(r -> {
+            if (!r.getRecordType().getId().equals(RecordTypeEnum.EXISTING.getId())
+                    && !r.getRecordType().getId().equals(RecordTypeEnum.ADDITIONAL.getId())) {
+                repository.deleteById(r.getId());
+            }
         });
-        repository.findAllByRoomId(room.getId()).stream()
-                .filter(r -> !r.getRecordType().getId().equals(RecordTypeEnum.EXISTING.getId()))
+        List<Record> allRecords = repository.findAllByRoomId(room.getId());
+        lampService.findAll().stream()
+                .filter(l -> !allRecords.stream()
+                        .filter(r -> r.getRecordType().getId().equals(RecordTypeEnum.ADDITIONAL.getId()))
+                        .findFirst().orElse(Record.builder().lamp(Lamp.builder().id(-1L).build()).build()).getLamp().getId().equals(l.getId()))
+                .forEach(lamp -> {
+                    RecordDto recordDto = new RecordDto();
+                    Integer countLamp = getCountLamp(room, lamp);
+                    Integer countSocle = getCountSocle(lamp, countLamp);
+                    setRecordDtoFields(lamp, countLamp, room, recordDto, countSocle, RecordTypeEnum.NEW);
+                    save(recordDto);
+                });
+        allRecords.stream().filter(r -> !r.getRecordType().getId().equals(RecordTypeEnum.EXISTING.getId()))
                 .min(Comparator.comparing(Record::getSum))
                 .ifPresent(r -> {
                     if (r.getRecordType().getId().equals(RecordTypeEnum.ADDITIONAL.getId())) {
@@ -92,11 +103,11 @@ public class RecordService {
     }
 
     private Integer getCountSocle(LampDto lamp, Integer countLamp) {
-        return (int) Math.ceil((double) countLamp / lamp.getSocle().getPlace());
+        return (int) Math.round(Math.ceil((double) countLamp / lamp.getSocle().getPlace()));
     }
 
     private Integer getCountLamp(RoomDto room, LampDto lamp) {
-        return (int) Math.ceil(((double) (room.getSquare() * lamp.getLuminousFlux())) / room.getRoomType().getLightningRate());
+        return (int) Math.round(Math.ceil((room.getSquare() * lamp.getLuminousFlux()) / room.getRoomType().getLightningRate()));
     }
 
     public void saveExisting(RecordDto recordDto) {
@@ -105,17 +116,24 @@ public class RecordService {
         Integer countLamp = recordDto.getCountLamp();
         Integer countSocle = getCountSocle(lamp, countLamp);
         setRecordDtoFields(lamp, countLamp, room, recordDto, countSocle, RecordTypeEnum.EXISTING);
-        save(recordDto);
+        if (repository.findAllByRoomId(recordDto.getRoom().getId()).stream().noneMatch(r -> r.getRecordType().getId().equals(RecordTypeEnum.EXISTING.getId()))) {
+            save(recordDto);
+        }
 
         RecordDto recordEffectivity = new RecordDto();
         Integer countLampEffectivity = getCountLamp(room, lamp);
         Integer countSocleEffectivity = getCountSocle(lamp, countLampEffectivity);
         setRecordDtoFields(recordDto.getLamp(), countLampEffectivity, room, recordEffectivity, countSocleEffectivity, RecordTypeEnum.ADDITIONAL);
-        recordEffectivity.setCountLamp(countLampEffectivity - countLamp);
-        recordEffectivity.setCountSocle(countSocleEffectivity - countSocle);
-        double lampsOnAllYears = lamp.getPrice() * (recordEffectivity.getCountLamp() * room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork();
+        double lampsOnAllYears = (lamp.getPrice() * ((countLampEffectivity - countLamp) * room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork());
         double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * 1.66) / 1000;
-        recordEffectivity.setSum(recordEffectivity.getCountSocle() * lamp.getSocle().getPrice() + lampsOnAllYears + recordEffectivity.getCountLamp() * electricEnergy);
+        double cocols = ((recordEffectivity.getCountSocle() - countSocle) * lamp.getSocle().getPrice());
+        if (cocols < 0) {
+            cocols = 0;
+        }
+        if (lampsOnAllYears < 0) {
+            lampsOnAllYears = 0;
+        }
+        recordEffectivity.setSum(cocols + lampsOnAllYears + countLampEffectivity * electricEnergy);
         save(recordEffectivity);
     }
 

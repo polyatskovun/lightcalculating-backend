@@ -17,7 +17,7 @@ import java.util.List;
 public class RoomDto implements Serializable {
 
     private Long id;
-    private Integer square;
+    private Double square;
     private String number;
     private Double hoursOfUses;
     private RoomTypeDto roomType;
