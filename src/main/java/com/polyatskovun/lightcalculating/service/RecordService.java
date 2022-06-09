@@ -85,7 +85,7 @@ public class RecordService {
                     setRecordDtoFields(lamp, countLamp, room, recordDto, countSocle, RecordTypeEnum.NEW);
                     save(recordDto);
                 });
-        allRecords.stream().filter(r -> !r.getRecordType().getId().equals(RecordTypeEnum.EXISTING.getId()))
+        repository.findAllByRoomId(room.getId()).stream().filter(r -> !r.getRecordType().getId().equals(RecordTypeEnum.EXISTING.getId()))
                 .min(Comparator.comparing(Record::getSum))
                 .ifPresent(r -> {
                     if (r.getRecordType().getId().equals(RecordTypeEnum.ADDITIONAL.getId())) {
