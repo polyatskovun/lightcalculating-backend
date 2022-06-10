@@ -23,4 +23,6 @@ public class RecordDto implements Serializable {
     private RoomDto room;
     private LampDto lamp;
     private RecordTypeDto recordType;
+
+    private Double sumElectricity;
 }

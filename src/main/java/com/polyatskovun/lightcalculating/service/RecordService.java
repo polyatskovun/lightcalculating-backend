@@ -55,11 +55,17 @@ public class RecordService {
     }
 
     public List<RecordDto> findAll() {
-        return repository.findAll().stream().map(mapper::toDto).toList();
+        return repository.findAll().stream().map(mapper::toDto).peek(r -> {
+            double electricEnergy = (r.getLamp().getPower() * r.getYearCount() * r.getRoom().getHoursOfUses() * 365 * 1.66) / 1000;
+            r.setSumElectricity(electricEnergy * getCountLamp(r.getRoom(), r.getLamp()));
+        }).toList();
     }
 
     public List<RecordDto> findByRoomId(Long roomId) {
-        return repository.findAllByRoomId(roomId).stream().map(mapper::toDto).toList();
+        return repository.findAllByRoomId(roomId).stream().map(mapper::toDto).peek(r -> {
+            double electricEnergy = (r.getLamp().getPower() * r.getYearCount() * r.getRoom().getHoursOfUses() * 365 * 1.66) / 1000;
+            r.setSumElectricity(electricEnergy * getCountLamp(r.getRoom(), r.getLamp()));
+        }).toList();
     }
 
     public void deleteById(Long id) {
@@ -107,7 +113,7 @@ public class RecordService {
     }
 
     private Integer getCountLamp(RoomDto room, LampDto lamp) {
-        return (int) Math.round(Math.ceil((room.getSquare() * lamp.getLuminousFlux()) / room.getRoomType().getLightningRate()));
+        return (int) Math.round(Math.ceil((room.getSquare() * room.getRoomType().getLightningRate()) / lamp.getLuminousFlux()));
     }
 
     public void saveExisting(RecordDto recordDto) {
@@ -115,7 +121,7 @@ public class RecordService {
         LampDto lamp = recordDto.getLamp();
         Integer countLamp = recordDto.getCountLamp();
         Integer countSocle = getCountSocle(lamp, countLamp);
-        setRecordDtoFields(lamp, countLamp, room, recordDto, countSocle, RecordTypeEnum.EXISTING);
+        setRecordDtoFieldsForExisting(lamp, countLamp, room, recordDto, countSocle);
         if (repository.findAllByRoomId(recordDto.getRoom().getId()).stream().noneMatch(r -> r.getRecordType().getId().equals(RecordTypeEnum.EXISTING.getId()))) {
             save(recordDto);
         }
@@ -137,8 +143,20 @@ public class RecordService {
         save(recordEffectivity);
     }
 
+    private void setRecordDtoFieldsForExisting(LampDto lamp, Integer countLamp, RoomDto room, RecordDto recordDto, Integer countSocle) {
+        double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * 1.66) / 1000;
+        recordDto.setCountLamp(countLamp);
+        recordDto.setCountSocle(countSocle);
+        recordDto.setSum(countLamp * electricEnergy);
+        recordDto.setYearCount(room.getYearCount());
+        recordDto.setRoom(room);
+        recordDto.setLamp(lamp);
+        recordTypeRepository.findById(RecordTypeEnum.EXISTING.getId()).map(recordTypeMapper::toDto).ifPresent(recordDto::setRecordType);
+    }
+
     private void setRecordDtoFields(LampDto lamp, Integer countLamp, RoomDto room, RecordDto recordDto, Integer countSocle, RecordTypeEnum existing) {
-        double lampsOnAllYears = lamp.getPrice() * (countLamp * room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork();
+        double termOfWorks = Math.round(Math.ceil((room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork()));
+        double lampsOnAllYears = lamp.getPrice() * countLamp * termOfWorks;
         double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * 1.66) / 1000;
         recordDto.setCountLamp(countLamp);
         recordDto.setCountSocle(countSocle);

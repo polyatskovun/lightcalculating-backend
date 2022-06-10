@@ -1,6 +1,6 @@
 #FileLock
-#Thu Jun 09 13:29:04 EEST 2022
-server=192.168.0.103\:52683
-hostName=INF-NOTEBOOK14
+#Fri Jun 10 12:50:42 EEST 2022
+server=172.29.96.1\:57384
+hostName=DESKTOP-IRCNHJ5.mshome.net
 method=file
-id=1814802a5ab3003bf732af32a52e2113df17118349c
+id=1814d05e9aedeee1e18193a0b231da37aeaa8f34fa8
