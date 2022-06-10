@@ -32,3 +32,7 @@ build/
 .vscode/
 /.mvn/
 /.jpb/
+
+light_calculating_db.lock.db
+light_calculating_db.mv.db
+light_calculating_db.trace.db
