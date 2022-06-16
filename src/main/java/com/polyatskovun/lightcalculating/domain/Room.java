@@ -27,14 +27,18 @@ public class Room extends IdEntity {
     @Column
     private Double hoursOfUses;
 
+    @Column
+    private Double traffic;
+
     @ManyToOne
     @JoinColumn(name = "room_type_id", referencedColumnName = "id")
     private RoomType roomType;
 
     @Builder(toBuilder = true)
-    public Room(Long id, Double square, Double hoursOfUses, String number, RoomType roomType) {
+    public Room(Long id, Double square, Double traffic, Double hoursOfUses, String number, RoomType roomType) {
         super(id);
         this.square = square;
+        this.traffic = traffic;
         this.number = number;
         this.roomType = roomType;
         this.hoursOfUses = hoursOfUses;

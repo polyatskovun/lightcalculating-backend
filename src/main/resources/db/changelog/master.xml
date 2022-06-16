@@ -121,4 +121,10 @@
     <changeSet id="1654323830592-8" author="polytskovun">
         <renameTable oldTableName="user" newTableName="user_table"/>
     </changeSet>
+
+    <changeSet id="1654323830592-9" author="polytskovun">
+        <addColumn tableName="room">
+            <column name="traffic" type="DOUBLE"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

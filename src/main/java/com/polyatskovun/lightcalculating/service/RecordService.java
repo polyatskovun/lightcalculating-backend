@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Consumer;
 
 @Service
 @Transactional
@@ -55,17 +56,11 @@ public class RecordService {
     }
 
     public List<RecordDto> findAll() {
-        return repository.findAll().stream().map(mapper::toDto).peek(r -> {
-            double electricEnergy = (r.getLamp().getPower() * r.getYearCount() * r.getRoom().getHoursOfUses() * 365 * 1.66) / 1000;
-            r.setSumElectricity(electricEnergy * getCountLamp(r.getRoom(), r.getLamp()));
-        }).toList();
+        return repository.findAll().stream().map(mapper::toDto).peek(getRecordDtoConsumer()).toList();
     }
 
     public List<RecordDto> findByRoomId(Long roomId) {
-        return repository.findAllByRoomId(roomId).stream().map(mapper::toDto).peek(r -> {
-            double electricEnergy = (r.getLamp().getPower() * r.getYearCount() * r.getRoom().getHoursOfUses() * 365 * 1.66) / 1000;
-            r.setSumElectricity(electricEnergy * getCountLamp(r.getRoom(), r.getLamp()));
-        }).toList();
+        return repository.findAllByRoomId(roomId).stream().map(mapper::toDto).peek(getRecordDtoConsumer()).toList();
     }
 
     public void deleteById(Long id) {
@@ -141,7 +136,8 @@ public class RecordService {
 
 
 
-        double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * 1.66) / 1000;
+        double traffic = room.getTraffic() != null ? room.getTraffic() : 1.66;
+        double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * traffic) / 1000;
         double cocols = ((recordEffectivity.getCountSocle() - countSocle) * lamp.getSocle().getPrice());
         if (cocols < 0) {
             cocols = 0;
@@ -152,7 +148,8 @@ public class RecordService {
     }
 
     private void setRecordDtoFieldsForExisting(LampDto lamp, Integer countLamp, RoomDto room, RecordDto recordDto, Integer countSocle) {
-        double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * 1.66) / 1000;
+        double traffic = room.getTraffic() != null ? room.getTraffic() : 1.66;
+        double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * traffic) / 1000;
         recordDto.setCountLamp(countLamp);
         recordDto.setCountSocle(countSocle);
         int   lampsOnAllYears = (int) Math.round(Math.ceil ((room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork() ));
@@ -167,7 +164,8 @@ public class RecordService {
     private void setRecordDtoFields(LampDto lamp, Integer countLamp, RoomDto room, RecordDto recordDto, Integer countSocle, RecordTypeEnum existing) {
         double termOfWorks = Math.round(Math.ceil((room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork())) ;
         double lampsOnAllYears = lamp.getPrice() * countLamp * termOfWorks;
-        double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * 1.66) / 1000;
+        double traffic = room.getTraffic() != null ? room.getTraffic() : 1.66;
+        double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * traffic) / 1000;
         recordDto.setCountLamp(countLamp);
         recordDto.setCountSocle(countSocle);
         recordDto.setSum(countSocle * lamp.getSocle().getPrice() + lampsOnAllYears + countLamp * electricEnergy);
@@ -179,5 +177,13 @@ public class RecordService {
 
     public void deleteAllByRoomId(Long id) {
         repository.deleteAllByRoomId(id);
+    }
+
+    private Consumer<RecordDto> getRecordDtoConsumer() {
+        return r -> {
+            double traffic = r.getRoom().getTraffic() != null ? r.getRoom().getTraffic() : 1.66;
+            double electricEnergy = (r.getLamp().getPower() * r.getYearCount() * r.getRoom().getHoursOfUses() * 365 * traffic) / 1000;
+            r.setSumElectricity(electricEnergy * getCountLamp(r.getRoom(), r.getLamp()));
+        };
     }
 }

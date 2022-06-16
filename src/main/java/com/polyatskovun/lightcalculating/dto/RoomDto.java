@@ -20,6 +20,7 @@ public class RoomDto implements Serializable {
     private Double square;
     private String number;
     private Double hoursOfUses;
+    private Double traffic;
     private RoomTypeDto roomType;
 
     private List<RecordDto> records;
