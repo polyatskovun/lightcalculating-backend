@@ -130,16 +130,24 @@ public class RecordService {
         Integer countLampEffectivity = getCountLamp(room, lamp);
         Integer countSocleEffectivity = getCountSocle(lamp, countLampEffectivity);
         setRecordDtoFields(recordDto.getLamp(), countLampEffectivity, room, recordEffectivity, countSocleEffectivity, RecordTypeEnum.ADDITIONAL);
-        double lampsOnAllYears = (lamp.getPrice() * ((countLampEffectivity - countLamp) * room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork());
+
+        int   lampsOnAllYears = (int) Math.round(Math.ceil ((room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork() ));
+
+        double  priceAllLamps = lamp.getPrice() * ((lampsOnAllYears - 1) * countLamp + countLampEffectivity - countLamp);
+
+        if (countLampEffectivity - countLamp < 0) {
+             priceAllLamps = lamp.getPrice() * (lampsOnAllYears - 1) * countLampEffectivity;
+        }
+
+
+
         double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * 1.66) / 1000;
         double cocols = ((recordEffectivity.getCountSocle() - countSocle) * lamp.getSocle().getPrice());
         if (cocols < 0) {
             cocols = 0;
         }
-        if (lampsOnAllYears < 0) {
-            lampsOnAllYears = 0;
-        }
-        recordEffectivity.setSum(cocols + lampsOnAllYears + countLampEffectivity * electricEnergy);
+
+        recordEffectivity.setSum(cocols + priceAllLamps + countLampEffectivity * electricEnergy);
         save(recordEffectivity);
     }
 
@@ -147,7 +155,9 @@ public class RecordService {
         double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * 1.66) / 1000;
         recordDto.setCountLamp(countLamp);
         recordDto.setCountSocle(countSocle);
-        recordDto.setSum(countLamp * electricEnergy);
+        int   lampsOnAllYears = (int) Math.round(Math.ceil ((room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork() ));
+        double  priceAllLamps = lamp.getPrice() * (lampsOnAllYears - 1) * countLamp;
+        recordDto.setSum(countLamp * electricEnergy + priceAllLamps);
         recordDto.setYearCount(room.getYearCount());
         recordDto.setRoom(room);
         recordDto.setLamp(lamp);
@@ -155,7 +165,7 @@ public class RecordService {
     }
 
     private void setRecordDtoFields(LampDto lamp, Integer countLamp, RoomDto room, RecordDto recordDto, Integer countSocle, RecordTypeEnum existing) {
-        double termOfWorks = Math.round(Math.ceil((room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork()));
+        double termOfWorks = Math.round(Math.ceil((room.getYearCount() * room.getHoursOfUses() * 365) / lamp.getTermOfWork())) ;
         double lampsOnAllYears = lamp.getPrice() * countLamp * termOfWorks;
         double electricEnergy = (lamp.getPower() * room.getYearCount() * room.getHoursOfUses() * 365 * 1.66) / 1000;
         recordDto.setCountLamp(countLamp);
